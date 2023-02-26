@@ -37,16 +37,28 @@ const login = async (req, res) => {
     throw new UnAuthenticatedError("Invalid credentials");
   }
   console.log(user);
-  const isPassword=await user.comparePasswords(password);
+  const isPassword = await user.comparePasswords(password);
   if (!isPassword) {
     throw new UnAuthenticatedError("Invalid credentials");
   }
   const token = user.createJWT();
-  user.password = undefined
-  res.status(StatusCodes.OK).json({user,token,location:user.location});
+  user.password = undefined;
+  res.status(StatusCodes.OK).json({ user, token, location: user.location });
 };
 const updateUser = async (req, res) => {
-  res.send("update user");
+  const { email, name, lastName, location } = req.body;
+  if (!email || !name || !lastName || !location) {
+    throw new BadRequestError("Please provide all values");
+  }
+  const user = await User.findOne({ _id: req.user.userId });
+  user.email = email;
+  user.name = name;
+  user.lastName = lastName;
+  user.location = location;
+
+  await user.save();
+  const token = user.createJWT();
+  res.status(StatusCodes.OK).json({ user, token, location: user.location });
 };
 
 export { register, login, updateUser };
